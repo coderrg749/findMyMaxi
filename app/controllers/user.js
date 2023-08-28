@@ -25,7 +25,7 @@ userControllers.signUp = async (req, res) => {
     if (existingUser) {
       res
         .status(404)
-        .json({ message: "An account with provided email already exists" , status:"404"});
+        .json({ message: "An account with provided credentails already exists" , status:"404"});
     }
     let user = await User.create({
       username,
@@ -81,7 +81,6 @@ userControllers.sendEmailOtp = async (req, res) => {
 };
 
 // VERIFY EMAIL API ------------------------------------------------------->
-
 userControllers.verifyEmailOtp = async (req, res) => {
   try {
     const { userId, otp } = req.body;
@@ -113,7 +112,6 @@ userControllers.verifyEmailOtp = async (req, res) => {
 };
 
 // LOGIN API ---------------------------------------------------------------------------------->
-
 userControllers.login = async (req, res) => {
   try {
     let user;
@@ -182,17 +180,17 @@ userControllers.changePassword = async (req, res) => {
     let { error } = userSchema.passwordSchema.validate(req.body);
     if (error) {
       return res
-        .status(400)
-        .json({ message: `Invalid Body`, error: error.message , status:"400" });
+      .status(400)
+      .json({ message: `Invalid Body`, error: error.message , status:"400" });
     }
+    let { oldPassword, newPassword, confirmPassword } = req.body;
     if (newPassword !== confirmPassword) {
       return res
         .status(400)
         .json({ message: "The provided password Doesn't match" , status:"400" });
     }
-    let { oldPassword, newPassword, confirmPassword } = req.body;
     let userOldPassHash = await User.findById(req.user?.id).select(
-      password + 1
+      password +1
     );
     if (!compareHash(oldPassword, userOldPassHash)) {
       return res.status(400).message({ message: "Old password doesn't match" , status:"400" });
@@ -223,30 +221,41 @@ userControllers.forgetPassword = async(req,res)=>{
   try{
 let{error}=userSchema.forgetPass.validate(req.body);
 if(error){
-  return res.status(400).json({message:"Invalid Email Id", status:"400" })
+  return res.status(400).json({message:"Wrong Email", status:"400" })
 }
-const{email}=req.body;
-let user = await User.findOne({email:email});
-if(!user){
-  return res.status(404).json({message:"No user exists with given email", status:"404" })
+let {email}=req.body;
+let existingUser=await User.findOne({email});
+if(!existingUser){
+  return res.status(400).json({message:"NO Account With given Email", status:"400" })
 }
-// const emailOtp = generateOtp(6);
-// // console.log(emailOtp);
-// const otpExpiryDate = new Date(Date.now() + 2* 60 * 1000); // OTP expires in 5 minutes
-// const verify = await Verification.create({
-//   userId: user?._id,
-//   type: "email",
-//   otp: emailOtp,
-//   expiresAt: otpExpiryDate,
-// });
-// // console.log(verify);
-// let message = await sendOtp(emailOtp, email);
-// if(message){
-
-// }
+return res.status(200).json({status:200,message:"User Fetched Move to Email Verification" ,email}) // gona add res.redirect 
+  }catch(err){ //userId:existingUser?._id
+throw new Error(err)
+  }
+}
+// RESET PASSWORD API ----------------------------------------------------------------------------->
+userControllers.resetPassword = async(req,res)=>{
+  try{
+    let{error}= userSchema.resetPasswordSchema.validate(req.body);
+    if(error){
+      return res.status(400).json({message:'Invalid Data', status:"400"})
+    }
+    let {email,newPassword,confirmPassword}=req.body;
+    if(newPassword!==confirmPassword){
+      return res.status(400).json({message:'New and Confirm Password Doesn\'t Match'})
+    }
+    let newPasswordHash= generateHash(newPassword);
+    let updatedUser = await User.updateOne({email},{$set:{password:newPasswordHash}},{new:true})
+    if(!updatedUser){
+      return res.status(400).json({message:"Unable to update Password"})
+    }
+    return res.status(200).json({user:updatedUser,message:"Password Updated Successfuly",status:true})
 
   }catch(err){
-throw new Error(err)
+    return res
+    .status(500)
+    .json({ message: "Internal Server Error", error: err, status:"500"  });
+
   }
 }
 
