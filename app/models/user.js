@@ -29,7 +29,7 @@ var userSchema = new mongoose.Schema(
     emailVerified: { type: Boolean, default: false },
     phoneVerified: { type: Boolean, default: false },
     role: {
-      typpe: String,
+      type: String,
       enum: ["admin", "user"],
       default: "user",
     },

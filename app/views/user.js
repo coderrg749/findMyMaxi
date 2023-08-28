@@ -11,13 +11,13 @@ userSchema.registerationSchema =Joi.object({
     .messages({
       'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one digit, one special character, and be at least 8 characters long'
     }),
-    mobileDialCode:Joi.string().pattern(/^[+]{1}(?:[0-9\-\(\)\/\.]\s?){6, 15}[0-9]{1}$/).required(),
+    mobileDialCode:Joi.string().required(),
     mobile:Joi.string().required(),//registe
     role:Joi.string()
 })
 
 
-
+// pattern(/^[+]{1}(?:[0-9\-\(\)\/\.]\s?){6, 15}[0-9]{1}$/)
 
 userSchema.passwordSchema =Joi.object({
   oldPassword: Joi.string()

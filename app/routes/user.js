@@ -9,7 +9,7 @@ router.post('/register',userControllers.signUp);
 router.post('/sendOtp',userControllers.sendEmailOtp);
 router.post('/verifyOtp',userControllers.verifyEmailOtp);
 router.post('/login',userControllers.login);
-router.post('/resetPassword',authMiddleware.userControllers.changePassword)
+router.post('/resetPassword',authMiddleware,userControllers.changePassword)
 router.post('/mobileOtp',userControllers.sendPhoneOtp);
 
 module.exports = router;

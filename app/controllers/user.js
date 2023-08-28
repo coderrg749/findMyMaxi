@@ -18,7 +18,7 @@ userControllers.signUp = async (req, res) => {
     if (error) {
       res.status(400).json({ message: "Invalid Credentials " });
     }
-    const { username, email, mobile, password } = req.body;
+    const { username, email, mobile, password ,mobileDialCode } = req.body;
     let existingUser = await User.findOne({
       $or: [{ email: email }, { mobile: mobile }],
     });
@@ -32,6 +32,7 @@ userControllers.signUp = async (req, res) => {
       email,
       mobile,
       password: generateHash(password),
+      mobileDialCode
     });
     if (!user) {
       res.status(400).json({ message: "User can't be created" });
@@ -153,6 +154,8 @@ userControllers.login = async (req, res) => {
   }
 };
 
+
+// SEND MOBILE OTP --------------------------------------------------------------------------->
 userControllers.sendPhoneOtp = async (req, res) => {
   console.log(req.body, "req body");
   try {
@@ -175,57 +178,80 @@ userControllers.sendPhoneOtp = async (req, res) => {
   }
 };
 
+// CHANGE PASSWORD/UPDATE PASSWORD API -------------------------------------------------------------->
+userControllers.changePassword = async (req, res) => {
+  try {
+    let { error } = userSchema.passwordSchema.validate(req.body);
+    if (error) {
+      return res
+        .status(400)
+        .json({ message: `Invalid Body`, error: error.message });
+    }
+    if (newPassword !== confirmPassword) {
+      return res
+        .status(400)
+        .json({ message: "The provided password Doesn't match" });
+    }
+    let { oldPassword, newPassword, confirmPassword } = req.body;
+    let userOldPassHash = await User.findById(req.user?.id).select(
+      password + 1
+    );
+    if (!compareHash(oldPassword, userOldPassHash)) {
+      return res.status(400).message({ message: "Old password doesn't match" });
+    }
+    let newPasswordHash = generateHash(newPassword);
+    if (newPasswordHash) {
+      let updatedUser = await User.findByIdAndUpdate(
+        req.user?.id,
+        { password: newPasswordHash },
+        { new: true }
+      );
 
-userControllers.changePassword = async (req,res)=>{
-try{
-let {error}= userSchema.passwordSchema.validate(req.body);
+      if (!updatedUser) {
+        return res.status(400).json({ message: "unable to update Password" });
+      }
+      return res.status(200).json({ message: "Password Updated Successfuly" });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", error: err });
+  }
+};
+
+// FORGOT PASSWORD API -------------------------------------------------------->
+
+userControllers.forgetPasswor = async(req,res)=>{
+  try{
+let{error}=userSchema.forgetPass.validate(req.body);
 if(error){
-  return  res.status(400).json({message:`Invalid Body`,error:error.message});
+  return res.status(400).json({message:"Invalid Email Id"})
 }
-if(newPassword!==confirmPassword){
-  return res.status(400).json({message:"The provided password Doesn't match"})
+const{email}=req.body;
+let user = await User.findOne({email:email});
+if(!user){
+  return res.status(400).json({message:"No user exists with given email"})
 }
-let {oldPassword,newPassword,confirmPassword}=req.body;
-// let userOldPassHash =  
+// const emailOtp = generateOtp(6);
+// // console.log(emailOtp);
+// const otpExpiryDate = new Date(Date.now() + 2* 60 * 1000); // OTP expires in 5 minutes
+// const verify = await Verification.create({
+//   userId: user?._id,
+//   type: "email",
+//   otp: emailOtp,
+//   expiresAt: otpExpiryDate,
+// });
+// // console.log(verify);
+// let message = await sendOtp(emailOtp, email);
+// if(message){
 
+// }
 
-
+  }catch(err){
+throw new Error(err)
+  }
 }
 
-catch(err){
-return res.status(500).json({message:"Internal Server Error",error:err})
-}
-
-}
 module.exports = userControllers;
 
-// userControllers.forgetPasswor = async(req,res)=>{
-//   try{
-// let{error}=userSchema.forgetPass.validate(req.body);
-// if(error){
-//   return res.status(400).json({message:"Invalid Email Id"})
-// }
-// const{email}=req.body;
-// let user = await User.findOne({email:email});
-// if(!user){
-//   return res.status(400).json({message:"No user exists with given email"})
-// }
-// // const emailOtp = generateOtp(6);
-// // // console.log(emailOtp);
-// // const otpExpiryDate = new Date(Date.now() + 2* 60 * 1000); // OTP expires in 5 minutes
-// // const verify = await Verification.create({
-// //   userId: user?._id,
-// //   type: "email",
-// //   otp: emailOtp,
-// //   expiresAt: otpExpiryDate,
-// // });
-// // // console.log(verify);
-// // let message = await sendOtp(emailOtp, email);
-// // if(message){
 
-// // }
-
-//   }catch(err){
-// throw new Error(err)
-//   }
-// }
