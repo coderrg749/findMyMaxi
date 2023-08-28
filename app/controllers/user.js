@@ -37,7 +37,7 @@ userControllers.signUp = async (req, res) => {
     if (!user) {
       res.status(400).json({ message: "User can't be created" , status:"400" });
     }
-    return res.status(200).json({user,status:"200"});
+    return res.status(200).json({user,status:"200",message:"User created successfullyu"});
   } catch (err) {
     res
     .status(500)
