@@ -16,7 +16,7 @@ userControllers.signUp = async (req, res) => {
   try {
     const { error } = userSchema.registerationSchema.validate(req.body);
     if (error) {
-      res.status(400).json({ message: "Invalid Credentials " });
+      res.status(400).json({ message: "Invalid Credentials " , status:"400"});
     }
     const { username, email, mobile, password ,mobileDialCode } = req.body;
     let existingUser = await User.findOne({
@@ -24,8 +24,8 @@ userControllers.signUp = async (req, res) => {
     });
     if (existingUser) {
       res
-        .status(400)
-        .json({ message: "An account with provided email already exists" });
+        .status(404)
+        .json({ message: "An account with provided email already exists" , status:"404"});
     }
     let user = await User.create({
       username,
@@ -35,12 +35,13 @@ userControllers.signUp = async (req, res) => {
       mobileDialCode
     });
     if (!user) {
-      res.status(400).json({ message: "User can't be created" });
+      res.status(400).json({ message: "User can't be created" , status:"400" });
     }
-    return res.status(200).json(user);
+    return res.status(200).json({user,status:"200"});
   } catch (err) {
-    throw new Error(err.message);
-  }
+    res
+    .status(500)
+    .json({ message: "An error occurred while sending the OTP", error: err , status:"500"});  }
 };
 
 // SEND EMAIL OTP API ---------------------------------------------------------------------------->
@@ -50,7 +51,7 @@ userControllers.sendEmailOtp = async (req, res) => {
     console.log(req.body);
     const { userId, email } = req.body; // Assuming you have user info in the request
     if (!validMongoId(userId)) {
-      return res.status(400).json({ message: "Invalid Id" });
+      return res.status(400).json({ message: "Invalid Id", status:"400" });
     }
     const emailOtp = generateOtp(6);
     // console.log(emailOtp);
@@ -63,19 +64,19 @@ userControllers.sendEmailOtp = async (req, res) => {
     });
     // console.log(verify);
     let message = await sendOtp(emailOtp, email);
-    console.log("this is message", message);
+    // console.log("this is message", message);
     if (message) {
       res
         .status(200)
-        .json({ success: true, message: "Email OTP Sent successfully" });
+        .json({ success: true, message: "Email OTP Sent successfully", status:"200" });
       // res.send("Hello");
     } else {
-      res.status(400).json({ message: `Email can't be send` });
+      res.status(400).json({ message: "Email can't be send" , status:"400"});
     }
   } catch (err) {
     res
       .status(500)
-      .json({ message: "An error occurred while sending the OTP", error: err });
+      .json({ message: "An error occurred while sending the OTP", error: err , status:"500"});
   }
 };
 
@@ -98,19 +99,16 @@ userControllers.verifyEmailOtp = async (req, res) => {
         { emailVerified: true },
         { new: true }
       );
-      console.log(doc, "thisis doc");
       // Delete the verification entry
       let deleted = await Verification.deleteMany({ userId });
-      console.log(deleted, "this is deleted");
-
-      res.status(200).json({ message: "Email verified successfully" });
+      res.status(200).json({ message: "Email verified successfully", status:"200"  });
     } else {
-      res.status(400).json({ message: "Invalid OTP or OTP expired" });
+      res.status(400).json({ message: "Invalid OTP or OTP expired" , status:"400" });
     }
   } catch (err) {
     res
       .status(500)
-      .json({ message: "An error occurred while verifying the OTP" });
+      .json({ message: "An error occurred while verifying the OTP" , status:"500" });
   }
 };
 
@@ -121,7 +119,7 @@ userControllers.login = async (req, res) => {
     let user;
     let { error } = req.body;
     if (error) {
-      res.status(400).json({ message: "Invalid Credentials " });
+      res.status(400).json({ message: "Invalid Credentials " , status:"400" });
     }
     const { field, password } = req.body; // field can have email or username
     console.log(field);
@@ -135,12 +133,11 @@ userControllers.login = async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .json({ message: "No user with given Email Id exists" });
+        .json({ message: "No user with given Email Id exists", status:"404"  });
     }
-    console.log("working");
     let hashedPassword = user?.password;
     if (!compareHash(password, hashedPassword)) {
-      res.status(400).json({ message: "Incorrect Password" });
+      res.status(400).json({ message: "Incorrect Password", status:"400"  });
     }
     let token = generateToken(user?._id, user?.email);
     return res.status(200).json({
@@ -148,9 +145,10 @@ userControllers.login = async (req, res) => {
       username: user?.username,
       message: "User Loged in Succesfully",
       token: token,
+       status:"200" 
     });
   } catch (err) {
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "Internal Server Error", status:"500"  });
   }
 };
 
@@ -161,20 +159,20 @@ userControllers.sendPhoneOtp = async (req, res) => {
   try {
     const { userId, mobile } = req.body; // Assuming you have user info in the request
     if (!validMongoId(userId)) {
-      return res.status(400).json({ message: "Invalid Id" });
+      return res.status(400).json({ message: "Invalid Id", status:"400"  });
     }
     const phoneOtp = generateOtp(4);
     console.log(phoneOtp, "this is phone otp");
     let res = await sendMobileOtp(phoneOtp, mobile);
     console.log(res, "this is res");
     if (!res) {
-      return res.status(400).json({ message: "Unable to send mobile otp" });
+      return res.status(400).json({ message: "Unable to send mobile otp", status:"400"  });
     }
-    return res.status(200).json({ message: "Otp sent to phone number" });
+    return res.status(200).json({ message: "Otp sent to phone number", status:"200"  });
   } catch (err) {
     res
       .status(500)
-      .json({ message: "An error occurred while sending the OTP", error: err });
+      .json({ message: "An error occurred while sending the OTP", error: err , status:"500" });
   }
 };
 
@@ -185,19 +183,19 @@ userControllers.changePassword = async (req, res) => {
     if (error) {
       return res
         .status(400)
-        .json({ message: `Invalid Body`, error: error.message });
+        .json({ message: `Invalid Body`, error: error.message , status:"400" });
     }
     if (newPassword !== confirmPassword) {
       return res
         .status(400)
-        .json({ message: "The provided password Doesn't match" });
+        .json({ message: "The provided password Doesn't match" , status:"400" });
     }
     let { oldPassword, newPassword, confirmPassword } = req.body;
     let userOldPassHash = await User.findById(req.user?.id).select(
       password + 1
     );
     if (!compareHash(oldPassword, userOldPassHash)) {
-      return res.status(400).message({ message: "Old password doesn't match" });
+      return res.status(400).message({ message: "Old password doesn't match" , status:"400" });
     }
     let newPasswordHash = generateHash(newPassword);
     if (newPasswordHash) {
@@ -208,29 +206,29 @@ userControllers.changePassword = async (req, res) => {
       );
 
       if (!updatedUser) {
-        return res.status(400).json({ message: "unable to update Password" });
+        return res.status(400).json({ message: "unable to update Password" , status:"400" });
       }
-      return res.status(200).json({ message: "Password Updated Successfuly" });
+      return res.status(200).json({ message: "Password Updated Successfuly" , status:"200" });
     }
   } catch (err) {
     return res
       .status(500)
-      .json({ message: "Internal Server Error", error: err });
+      .json({ message: "Internal Server Error", error: err, status:"500"  });
   }
 };
 
 // FORGOT PASSWORD API -------------------------------------------------------->
 
-userControllers.forgetPasswor = async(req,res)=>{
+userControllers.forgetPassword = async(req,res)=>{
   try{
 let{error}=userSchema.forgetPass.validate(req.body);
 if(error){
-  return res.status(400).json({message:"Invalid Email Id"})
+  return res.status(400).json({message:"Invalid Email Id", status:"400" })
 }
 const{email}=req.body;
 let user = await User.findOne({email:email});
 if(!user){
-  return res.status(400).json({message:"No user exists with given email"})
+  return res.status(404).json({message:"No user exists with given email", status:"404" })
 }
 // const emailOtp = generateOtp(6);
 // // console.log(emailOtp);
