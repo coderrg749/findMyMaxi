@@ -24,8 +24,8 @@ userControllers.signUp = async (req, res) => {
     });
     if (existingUser) {
       res
-        .status(404)
-        .json({ message: "An account with provided credentails already exists" , status:"404"});
+        .status(400)
+        .json({ message: "An account with provided credentails already exists" , status:"400"});
     }
     let user = await User.create({
       username,
@@ -37,19 +37,19 @@ userControllers.signUp = async (req, res) => {
     if (!user) {
       res.status(400).json({ message: "User can't be created" , status:"400" });
     }
-    return res.status(200).json({user,status:"200",message:"User created successfullyu"});
+    return res.status(200).json({status:"200",message:"User created successfullyu",user});
   } catch (err) {
     res
     .status(500)
-    .json({ message: "An error occurred while sending the OTP", error: err , status:"500"});  }
+    .json({ message: "An error occurred while sending the OTP", error: err.message , status:"500"});  }
 };
 
 // SEND EMAIL OTP API ---------------------------------------------------------------------------->
 
 userControllers.sendEmailOtp = async (req, res) => {
   try {
-    console.log(req.body);
-    const { userId, email } = req.body; // Assuming you have user info in the request
+    // console.log(req.body);
+    const { userId, email } = req.body; 
     if (!validMongoId(userId)) {
       return res.status(400).json({ message: "Invalid Id", status:"400" });
     }
