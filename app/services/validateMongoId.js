@@ -1,3 +1,6 @@
+"use strict"
+
+/// function for validating moongoid
 const mongoose = require('mongoose')
 module.exports =(id)=>{
     const isValidId = new mongoose.Types.ObjectId(id);

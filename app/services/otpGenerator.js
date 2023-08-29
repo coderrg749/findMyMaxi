@@ -1,5 +1,4 @@
-
-
+"use strict"
 function generateOtp(length){
     let otp ="";
     for(let i=0;i<length;i++){

@@ -1,14 +1,14 @@
 "use strict"
 require('dotenv').config();
-const express= require('express')
+const express = require('express')
 const app = express();
-
 const userRouter=require('./app/routes/user');
 const cors = require('cors')
 require('./app/startup/dbConnection')()
 const port = process.env.PORT ||3000
+
 // app.use(cors({
-//     origin: '*',
+  //     origin: '*',
 //     credentials: true 
 // }));
 app.use(cors());
@@ -21,9 +21,6 @@ app.use(function (req, res, next) {
 app.use(express.json());
 app.use(express.urlencoded({extended:true}))
 app.use('/user',userRouter);
-
-
-
 
 app.listen(port,()=>{
     console.log(`server is running on ${port}`);

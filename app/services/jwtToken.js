@@ -1,3 +1,5 @@
+"use strict"
+
 const jwt = require('jsonwebtoken')
 
 function generateToken(id,email){

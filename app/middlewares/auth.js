@@ -1,4 +1,5 @@
-const User = require("../models/user");
+"use strict"
+const User = require('../models/user')
 const { verifyToken } = require("../services/jwtToken");
 
 // auth middleware -------------------------------------------------------------->
@@ -9,17 +10,18 @@ const authMiddleware = async (req, res, next) => {
       req.headers["authorization"] &&
       req.headers["authorization"].startsWith("Bearer")
     ) {
+
       token = req.headers.authorization.split(" ")[1];
       const decodedData = verifyToken(token);
-      const user = await User.findById(decodedData?.id).select(password-1,timestamps-1);
+      let userId=decodedData?.id;
+      const user = await User.findById(userId);
       req.user = user;
       next();
     } else {
       return res.status(401).json({ message: "Login Again Unauthorized" });
     }
   } catch (err) {
-    throw new Error("Internal Server Error", err.message);
-  }
+    return res.status(500).json({ message: "Internal Server Error" ,error:err });  }
 };
 
 /// Is Admin -------------------------------------------------------------------------------->
