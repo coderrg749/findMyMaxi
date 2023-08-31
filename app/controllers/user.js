@@ -8,7 +8,6 @@ const generateOtp = require("../services/otpGenerator");
 const { generateHash, compareHash } = require("../services/password");
 const sendOtp = require("../services/mailer");
 let { generateToken, verifyToken } = require("../services/jwtToken");
-let sendMobileOtp = require("../services/twilioOtp").default;
 
 const userControllers = {};
 
